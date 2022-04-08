@@ -31,8 +31,8 @@ class type weapon_type =
     Ensure that anything created by this constructor or the following ones has type weapon_type! *)
 class weapon (atk : int) (def : int) =
   object
-    method get_attack = failwith "weapon not implemented"
-    method get_defense = failwith "weapon not implemented"
+    method get_attack = atk
+    method get_defense = def
   end
 
 
@@ -53,20 +53,27 @@ class type entity_type =
 class entity (base_attack : int) (base_defense : int) (base_hp : int) : entity_type =
   object(this)
     (* Let's hold onto values for the attack, defense, max_hp, and current_hp! *)
+    val mutable attack = base_attack
+    val mutable defense = base_defense
+    val mutable health = base_hp
 
     (* Getters for public stats! Note that we don't want max_hp to be public *)
-    method get_attack = failwith "entity not implemented yet"
-    method get_defense = failwith "entity not implemented yet"
-    method get_health = failwith "entity not implemented yet"
+    method get_attack = attack
+    method get_defense = defense
+    method get_health = health
 
-    (* Should return true if the entity is out of hp *)
-    method is_down = failwith "entity not implemented yet"
+    (* Should return true if the entity is out of hp
+    method one *)
+    (* method is_down = health = 0 *)
+    method is_down = this#get_health = 0
 
     (* Update entity hp based on damage taken (do not consider attack/defense stats at the moment) *)
-    method deal_damage (dmg : int) = failwith "entity not implemented yet"
+    method deal_damage (dmg : int) = health <- health - dmg
 
     (* Update entity hp based on healing done. Do not exceed maximum hp *)
-    method restore_health (res : int) = failwith "entity not implemented yet"
+    method restore_health (res : int) = 
+      if health + res > base_hp then health <- base_hp 
+      else health <- health + res
   end
 
 class ones_stack =
@@ -83,11 +90,15 @@ class ones_stack =
 (* A sword has no defensive value, only offensive *)
 class sword (atk : int) =
   object
+    method offensive : int = atk
+    method defensive : int = 0
   end
 
 (* A shield has no offensive value, only defensive *)
 class shield (def : int) =
   object
+    method offensive : int = 0
+    method defensive : int = def
   end
 
 module FightSimulator =
@@ -97,7 +108,8 @@ module FightSimulator =
       Consider the damage formula to be damage = attacker's attack - defender's defense
       Attacks should not heal the defender! 
     *)
-    let attack (attacker : entity_type) (defender : entity_type) : unit = failwith "FightSimulator not implemented yet"
+    let attack (attacker : entity_type) (defender : entity_type) : unit = 
+      defender#deal_damage (attacker#get_attack - defender#get_defense)
 
     (* 
       Have two entities battle until one is down for the count. Attacks are sequential, so if an entity is downed
